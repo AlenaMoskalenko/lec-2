@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Node.js Interactive Blocks</title>
+    <style>
+        :root { --primary: #3b82f6; --success: #10b981; --bg: #0f172a; --card: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f8fafc; padding: 20px; overflow: hidden; }
+        .game-container { max-width: 800px; margin: 50px auto; text-align: center; }
+        .card { background: var(--card); padding: 40px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        .code-display { background: #000; padding: 30px; border-radius: 12px; font-family: 'Consolas', monospace; font-size: 1.4em; margin-bottom: 30px; border: 2px solid #334155; position: relative; }
+        .drop-zone { color: #fbbf24; border-bottom: 3px dashed #fbbf24; min-width: 120px; display: inline-block; height: 30px; vertical-align: bottom; }
+        .options-grid { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .option-btn { background: #334155; border: 2px solid #475569; color: white; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 1.1em; transition: 0.2s; }
+        .option-btn:hover { background: #475569; transform: translateY(-3px); }
+        .option-btn.correct { background: var(--success); border-color: #059669; }
+        .option-btn.wrong { background: #ef4444; border-color: #dc2626; }
+        .progress-bar { height: 8px; background: #334155; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.5s; }
+        .task-info { margin-bottom: 20px; color: #94a3b8; font-size: 1.1em; }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="progress-bar"><div id="progress" class="progress-fill"></div></div>
+    <div class="task-info" id="task-text">Рівень 1: Підключення модулів</div>
+    
+    <div class="card">
+        <div class="code-display" id="code-content">
+            const fs = <span class="drop-zone" id="zone">? ? ?</span>;
+        </div>
+
+        <div class="options-grid" id="options">
+            </div>
+    </div>
+</div>
+
+<script>
+    const levels = [
+        {
+            text: "Крок 1: Підключи вбудований модуль для роботи з файлами (fs)",
+            code: 'const fs = <span class="drop-zone">...</span>;',
+            options: ["require('fs')", "import('file')", "need('fs')", "require('path')"],
+            correct: "require('fs')"
+        },
+        {
+            text: "Крок 2: Прочитай файл 'data.json' синхронно",
+            code: 'const data = fs.<span class="drop-zone">...</span>("data.json", "utf-8");',
+            options: ["readFile", "readFileSync", "writeSync", "parseFile"],
+            correct: "readFileSync"
+        },
+        {
+            text: "Крок 3: Склей безпечний шлях до папки 'db'",
+            code: 'const path = require("path");<br>const dbPath = path.<span class="drop-zone">...</span>(__dirname, "db");',
+            options: ["add", "connect", "join", "resolve"],
+            correct: "join"
+        },
+        {
+            text: "Крок 4: Підключи конфігурацію з файлу .env",
+            code: 'require("dotenv").<span class="drop-zone">...</span>();<br>const port = process.env.PORT;',
+            options: ["start", "init", "config", "load"],
+            correct: "config"
+        },
+        {
+            text: "Крок 5: Перевір, чи є 'data.txt' файлом",
+            code: 'const stats = fs.statSync("data.txt");<br>if (stats.<span class="drop-zone">...</span>()) { ... }',
+            options: ["isFile", "isFolder", "exist", "check"],
+            correct: "isFile"
+        }
+    ];
+
+    let currentLevel = 0;
+
+    function renderLevel() {
+        const level = levels[currentLevel];
+        document.getElementById('task-text').innerText = level.text;
+        document.getElementById('code-content').innerHTML = level.code;
+        document.getElementById('progress').style.width = (currentLevel / levels.length) * 100 + "%";
+
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = "";
+        
+        // Перемішуємо варіанти
+        const shuffled = [...level.options].sort(() => Math.random() - 0.5);
+        
+        shuffled.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt, btn);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selected, btn) {
+        const correct = levels[currentLevel].correct;
+        if (selected === correct) {
+            btn.classList.add('correct');
+            document.querySelector('.drop-zone').innerText = selected;
+            document.querySelector('.drop-zone').style.border = "none";
+            
+            setTimeout(() => {
+                currentLevel++;
+                if (currentLevel < levels.length) {
+                    renderLevel();
+                } else {
+                    finishGame();
+                }
+            }, 800);
+        } else {
+            btn.classList.add('wrong');
+            setTimeout(() => btn.classList.remove('wrong'), 500);
+        }
+    }
+
+    function finishGame() {
+        document.getElementById('progress').style.width = "100%";
+        document.getElementById('task-text').innerText = "🏆 Вітаю! Ти опанував модулі та файли!";
+        document.getElementById('code-content').innerHTML = "Всі модулі підключено.<br>Шляхи нормалізовано.<br>Секрети захищено.";
+        document.getElementById('options').innerHTML = '<button class="option-btn" onclick="location.reload()">Грати знову</button>';
+    }
+
+    renderLevel();
+</script>
+</body>
+</html>
